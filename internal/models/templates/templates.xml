@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates>
+    <template role="admin">
+        <name>rewrite</name>
+        <value>Перепиши этот текст так, чтобы его можно было опубликовать в СМИ. Сделай интересное повествование и интересную подачу. Не добавляй в текст ничего лишнего. Текст должен быть простым и понятным.</value>
+        <temperature>0.5</temperature>
+        <description>Переписывает исходный текст в информационном стиле</description>
+    </template>
+    <template role="admin">
+        <name>summary</name>
+        <value>Сократи и перескажи этот текст. Выдели только основные и наиболее важные фрагменты.</value>
+        <temperature>0.3</temperature>
+        <description>Выделяет ключевые мысли из исходного текста</description>
+    </template>
+    <template role="admin">
+        <name>normalize</name>
+        <value>Расставь в этом тексте знаки препинания и заглавные буквы. Сохраняй исходный порядок слов. В ответ пришли только готовый текст. Не ставь кавычки в начале и в конце текста</value>
+        <temperature>0</temperature>
+        <description>Расставляет в тексте знаки препинания и заглавные буквы</description>
+    </template>
+    <template role="admin">
+        <name>analysis</name>
+        <value>Проанализируй эти данные и напиши по ним новость для публикации в СМИ. Текст новости должен отражать все ключевые моменты данных и быть простым и понятным для чтения.</value>
+        <temperature>0.5</temperature>
+        <description>Анализирует исходные данные и пишет новостной текст на этой основве</description>
+    </template>
+    <template role="admin">
+        <name>title</name>
+        <value>Придумай интересный и цепляющий заголовок для этой новости, чтобы его можно было опубликовать в СМИ. Заголовок должен быть коротким, но отражать суть новости. В ОТВЕТ ПРИШЛИ ТОЛЬКО ОДИН ЗАГОЛОВОК И НИЧЕГО БОЛЬШЕ</value>
+        <temperature>0.7</temperature>
+        <description>Придумывает один заголовок к исходному тексту</description>
+    </template>
+    <template role="admin">
+        <name>short</name>
+        <value>Выдели из этого текста главную мысль и сократи текст до 3-4 предложений. В ответ пришли только сокращенный текст</value>
+        <temperature>0.5</temperature>
+        <description>Сокращает текст до 3-4 предложений</description>
+    </template>
+</templates>
