@@ -111,5 +111,6 @@ func (s *Service) ProcessText(model, prompt, text, temperature string) (string, 
 		return "", err
 	}
 
+	s.logger.Info().Msg("Response text:" + Res.Result.Alternatives[0].Message.Text)
 	return Res.Result.Alternatives[0].Message.Text, nil
 }

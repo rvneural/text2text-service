@@ -1,6 +1,8 @@
 module Text2TextService
 
-go 1.22.6
+go 1.23.0
+
+toolchain go1.23.1
 
 require (
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect
@@ -10,6 +12,7 @@ require (
 	github.com/labstack/gommon v0.4.2 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
+	github.com/neuron-nexus/yandexgpt v1.0.0 // indirect
 	github.com/rs/zerolog v1.33.0 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect

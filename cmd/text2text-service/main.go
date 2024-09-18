@@ -5,7 +5,7 @@ import (
 	"Text2TextService/internal/pkg/app"
 )
 
-// main — входная точка в приложение
+// Main — входная точка в приложение
 func main() {
 
 	// Инициализация логгера
