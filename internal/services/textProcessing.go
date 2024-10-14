@@ -83,7 +83,7 @@ func (s *Service) parseDigest(model, text string) (string, error) {
 			}
 		}(link)
 	}
-	var resultTexts = "<ul>"
+	var resultTexts = ""
 	resultTextList := make([]string, 0, len(texts))
 	wg.Wait()
 
@@ -123,10 +123,9 @@ func (s *Service) parseDigest(model, text string) (string, error) {
 	}
 	wg.Wait()
 	for _, text := range resultTextList {
-		resultTexts += "<li>" + text + "</li>\n"
+		resultTexts += "<p>" + text + "</p>\n\n"
 	}
 	resultTexts = strings.TrimSpace(resultTexts)
-	resultTexts += "</ul>"
 	return strings.TrimSpace(resultTexts), nil
 }
 
@@ -144,6 +143,17 @@ func (s *Service) ProcessText(model, prompt, text, temperature string) (string, 
 
 	s.incQueueLength()
 	defer s.decQueueLength()
+
+	var err error
+
+	if len(strings.Fields(text)) == 1 {
+		if strings.HasPrefix(text, "https://realnoevremya.ru/") || strings.HasPrefix(text, "https://m.realnoevremya.ru") {
+			text, err = s.rvParser.ParseRV(strings.TrimSpace(text))
+			if err != nil {
+				return "", err
+			}
+		}
+	}
 
 	temp := s.parser.Parse(&prompt)
 
