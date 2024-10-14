@@ -3,6 +3,7 @@ package app
 import (
 	endpoint "Text2TextService/internal/endpoint/app"
 	service "Text2TextService/internal/services"
+	rvParser "Text2TextService/internal/services/rvparser"
 	promptParser "Text2TextService/internal/services/templates"
 	textHandler "Text2TextService/internal/transport/rest"
 	templatesHandler "Text2TextService/internal/transport/rest/getTemplates"
@@ -22,7 +23,8 @@ type App struct {
 func New(logger *zerolog.Logger) *App {
 	logger.Debug().Msg("Initializing app...")
 	parser := promptParser.New(logger)
-	service := service.New(parser, logger)
+	rvpars := rvParser.New(logger)
+	service := service.New(parser, rvpars, logger)
 
 	textHandler := textHandler.New(service, logger)
 	templatesHandler := templatesHandler.New(logger)

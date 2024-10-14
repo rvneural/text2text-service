@@ -20,6 +20,8 @@ github.com/neuron-nexus/yandexgpt v0.1.0 h1:m4hRF0jkktzKvKimCMPLtsr82nGRvygB0G1j
 github.com/neuron-nexus/yandexgpt v0.1.0/go.mod h1:yjbN/CyweA/T4iT7I5wIobn/PZb0cSIpswJGucO9gjg=
 github.com/neuron-nexus/yandexgpt v1.0.0 h1:2o7m9MGMukj07l4wLSNMJawP7AaLzIhAsp+olmiqBQk=
 github.com/neuron-nexus/yandexgpt v1.0.0/go.mod h1:yjbN/CyweA/T4iT7I5wIobn/PZb0cSIpswJGucO9gjg=
+github.com/neuron-nexus/yandexgpt/v2 v2.1.0 h1:sy2mFWZt6TbiTMbpMzsZ1dcf5gyaIpfl1UnUyMjBjeU=
+github.com/neuron-nexus/yandexgpt/v2 v2.1.0/go.mod h1:uGI7x1k2v1FWPFj3T2okcTkmnL6vZQHOcV5ea9m/iXI=
 github.com/pkg/errors v0.9.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 github.com/rs/xid v1.5.0/go.mod h1:trrq9SKmegXys3aeAKXMUTdJsYXVwGY3RLcfgqegfbg=
 github.com/rs/zerolog v1.33.0 h1:1cU2KZkvPxNyfgEmhHAz/1A9Bz+llsdYzklWFzgp0r8=

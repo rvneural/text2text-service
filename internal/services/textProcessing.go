@@ -2,35 +2,148 @@ package services
 
 import (
 	config "Text2TextService/internal/config/yandexGPT"
-	"Text2TextService/internal/models/json/yandexGPT"
+	yandexgpt "Text2TextService/internal/models/json/yandexGPT"
 	"bytes"
 	"encoding/json"
 	"io"
 	"net/http"
 	"strconv"
 	"strings"
+	"sync"
+	"time"
 
 	"github.com/rs/zerolog"
 )
+
+type DigestText struct {
+	Text string
+	URL  string
+}
 
 type Parser interface {
 	Parse(*string) string
 }
 
-type Service struct {
-	parser Parser
-	logger *zerolog.Logger
+type RVParser interface {
+	ParseRV(string) (string, error)
 }
 
-func New(parser Parser, logger *zerolog.Logger) *Service {
+type Service struct {
+	queueLen uint8
+	mu       sync.Mutex
+	parser   Parser
+	logger   *zerolog.Logger
+	rvParser RVParser
+}
+
+func New(parser Parser, rvParser RVParser, logger *zerolog.Logger) *Service {
 	return &Service{
-		parser: parser,
-		logger: logger,
+		parser:   parser,
+		logger:   logger,
+		rvParser: rvParser,
+		queueLen: 0,
 	}
+}
+
+func (s *Service) parseDigest(model, text string) (string, error) {
+
+	const prompt = "{{ short }}"
+
+	links := make([]string, 0, 30)
+	s.logger.Info().Msg("New request for DIGEST: " + text)
+	// Split text by '\n' and ' ', and put it into links
+	for _, line := range strings.Fields(text) {
+		links = append(links, strings.Fields(line)...)
+	}
+
+	texts := make([]DigestText, 0, len(links))
+
+	wg := sync.WaitGroup{}
+	mutex := sync.Mutex{}
+
+	for _, link := range links {
+		wg.Add(1)
+		go func(link string) {
+			defer wg.Done()
+			text, err := s.rvParser.ParseRV(link)
+			if err != nil {
+				s.logger.Error().Msg("Error while parsing url: " + err.Error())
+				mutex.Lock()
+				defer mutex.Unlock()
+				texts = append(texts, DigestText{Text: "НЕ УДАЛОСЬ ОБРАБОТАТЬ: " + link, URL: link})
+			}
+			if text != "" {
+				mutex.Lock()
+				defer mutex.Unlock()
+				s_link := strings.ReplaceAll(link, "https://realnoevremya.ru", "")
+				s_link = strings.ReplaceAll(s_link, "https://m.realnoevremya.ru", "")
+				texts = append(texts, DigestText{Text: text, URL: s_link})
+			} else {
+				s.logger.Error().Msg("Invalid url: " + link)
+			}
+		}(link)
+	}
+	var resultTexts = "<ul>"
+	resultTextList := make([]string, 0, len(texts))
+	wg.Wait()
+
+	for _, text := range texts {
+		wg.Add(1)
+		go func(text DigestText) {
+			defer wg.Done()
+			var resultText string
+			var err error
+			if strings.HasPrefix(text.Text, "НЕ УДАЛОСЬ ОБРАБОТАТЬ: ") {
+				resultText = text.Text
+			} else {
+				resultText, err = s.ProcessText(model, prompt, text.Text, "0.1")
+			}
+
+			if err != nil {
+				s.logger.Error().Msg("Error while processing text: " + err.Error())
+				return
+			}
+			url := "<a href=\"" + text.URL + "\" target=\"_blank\">"
+
+			var id int = 0
+
+			for i, s := range resultText {
+				if s == '.' || s == '!' || s == '?' || s == ',' || s == ';' || s == ':' || s == '—' || s == '-' {
+					if (i+1 < len(resultText) && resultText[i+1] == ' ') || (i+1 == len(resultText)) {
+						id = i
+						break
+					}
+				}
+			}
+			resultText = strings.TrimSpace(strings.ReplaceAll(url+resultText[:id]+"</a>"+resultText[id:], "\n", " "))
+			mutex.Lock()
+			resultTextList = append(resultTextList, resultText)
+			mutex.Unlock()
+		}(text)
+	}
+	wg.Wait()
+	for _, text := range resultTextList {
+		resultTexts += "<li>" + text + "</li>\n"
+	}
+	resultTexts = strings.TrimSpace(resultTexts)
+	resultTexts += "</ul>"
+	return strings.TrimSpace(resultTexts), nil
 }
 
 // ProcessText - обработка текста с использованием Yandex GPT
 func (s *Service) ProcessText(model, prompt, text, temperature string) (string, error) {
+
+	if prompt == "{{ digest }}" {
+		return s.parseDigest(model, text)
+	}
+
+	if s.getCurrentQueueLength() >= s.getMaxQueueLength() {
+		time.Sleep(time.Second)
+		return s.ProcessText(model, prompt, text, temperature)
+	}
+
+	s.incQueueLength()
+	defer s.decQueueLength()
 
 	temp := s.parser.Parse(&prompt)
 
@@ -113,4 +226,26 @@ func (s *Service) ProcessText(model, prompt, text, temperature string) (string, 
 
 	s.logger.Info().Msg("Response text:" + Res.Result.Alternatives[0].Message.Text)
 	return Res.Result.Alternatives[0].Message.Text, nil
+}
+
+func (s *Service) getMaxQueueLength() uint8 {
+	return 5
+}
+
+func (s *Service) getCurrentQueueLength() uint8 {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.queueLen
+}
+
+func (s *Service) incQueueLength() {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.queueLen++
+}
+
+func (s *Service) decQueueLength() {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.queueLen--
 }

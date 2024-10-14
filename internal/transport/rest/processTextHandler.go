@@ -2,9 +2,10 @@ package rest
 
 import (
 	client2 "Text2TextService/internal/models/json/client"
+	"net/http"
+
 	"github.com/labstack/echo/v4"
 	"github.com/rs/zerolog"
-	"net/http"
 )
 
 type Text2TextHandler struct {
@@ -33,7 +34,7 @@ func (handler *Text2TextHandler) HandleRequest(c echo.Context) error {
 	err := c.Bind(request)
 
 	if err != nil {
-		handler.logger.Error().Msg("Error while binding request: " + err.Error())
+		handler.logger.Error().Err(err).Msg("Error while binding request")
 		return c.JSON(http.StatusBadRequest, client2.Error{Error: "Invalid request body", Details: err.Error()})
 	}
 
@@ -50,7 +51,7 @@ func (handler *Text2TextHandler) HandleRequest(c echo.Context) error {
 	result, err := handler.service.ProcessText(request.Model, request.Prompt, request.Text, request.Temperature)
 
 	if err != nil {
-		handler.logger.Error().Msg("Error while reading body: " + err.Error())
+		handler.logger.Error().Err(err).Msg("Error while reading body")
 		return c.JSON(http.StatusInternalServerError, client2.Error{Error: "Internal server error", Details: err.Error()})
 	}
 
