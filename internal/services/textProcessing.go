@@ -239,7 +239,7 @@ func (s *Service) ProcessText(model, prompt, text, temperature string) (string, 
 }
 
 func (s *Service) getMaxQueueLength() uint8 {
-	return 1
+	return 2
 }
 
 func (s *Service) getCurrentQueueLength() uint8 {
