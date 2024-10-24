@@ -97,22 +97,11 @@ func (p *RVParser) prepare(url string) (string, error) {
 	return full, nil
 }
 
-func (p *RVParser) clearHTML(text string) string {
+func (p *RVParser) clearHTMLTags(parts []string) (textParts []string) {
+
+	textParts = make([]string, 0, len(parts))
 	const Template = `<.*?>`
 	r := regexp.MustCompile(Template)
-
-	parts := strings.Split(text, "\n")
-	wg := sync.WaitGroup{}
-	for i := 0; i < len(parts); i++ {
-		wg.Add(1)
-		go func(i int) {
-			defer wg.Done()
-			parts[i] = strings.TrimSpace(parts[i])
-		}(i)
-	}
-	wg.Wait()
-
-	textParts := make([]string, 0, len(parts))
 
 	for _, part := range parts {
 		if len(part) == 0 {
@@ -154,6 +143,20 @@ func (p *RVParser) clearHTML(text string) string {
 			textParts = append(textParts, part)
 		}
 	}
+	return textParts
+}
 
-	return strings.Join(textParts, "\n\n")
+func (p *RVParser) clearHTML(text string) string {
+	parts := strings.Split(text, "\n")
+	wg := sync.WaitGroup{}
+	for i := 0; i < len(parts); i++ {
+		wg.Add(1)
+		go func(i int) {
+			defer wg.Done()
+			parts[i] = strings.TrimSpace(parts[i])
+		}(i)
+	}
+	wg.Wait()
+
+	return strings.Join(p.clearHTMLTags(parts), "\n\n")
 }

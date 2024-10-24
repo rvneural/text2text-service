@@ -2,7 +2,7 @@ package services
 
 import (
 	config "Text2TextService/internal/config/yandexGPT"
-	"Text2TextService/internal/models/json/yandexGPT"
+	yandexgpt "Text2TextService/internal/models/json/yandexGPT"
 	"encoding/json"
 	"errors"
 	"strings"
@@ -17,7 +17,7 @@ func (s *Service) getRequestBody(model, prompt, text, temperature string) ([]byt
 	if model == "lite" {
 		Req.ModelURI = "gpt://" + config.STORAGE_ID + "/yandexgpt-lite/rc"
 	} else if model == "pro" {
-		Req.ModelURI = "gpt://" + config.STORAGE_ID + "/yandexgpt/latest"
+		Req.ModelURI = "gpt://" + config.STORAGE_ID + "/yandexgpt-32k/rc"
 	} else {
 		return nil, errors.New("unsupported model")
 	}
