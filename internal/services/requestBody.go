@@ -17,7 +17,7 @@ func (s *Service) getRequestBody(model, prompt, text, temperature string) ([]byt
 	if model == "lite" {
 		Req.ModelURI = "gpt://" + config.STORAGE_ID + "/yandexgpt-lite/rc"
 	} else if model == "pro" {
-		Req.ModelURI = "gpt://" + config.STORAGE_ID + "/yandexgpt-32k/rc"
+		Req.ModelURI = "gpt://" + config.STORAGE_ID + "/yandexgpt/rc"
 	} else {
 		return nil, errors.New("unsupported model")
 	}
