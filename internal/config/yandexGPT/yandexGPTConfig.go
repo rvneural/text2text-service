@@ -1,11 +1,16 @@
 package yandexgpt
 
+import "os"
+
 const (
-	GPT_API_KEY = "AQVNzU5pE0yY9za2gCmN9dGxE0B0nb6hKm8aWzdX"
-	STORAGE_ID  = "b1gjtlqofdt5mu5io6a9"
-	URI         = "https://llm.api.cloud.yandex.net/foundationModels/v1/completion"
-	MAX_TOKENS  = "32000"
+	URI        = "https://llm.api.cloud.yandex.net/foundationModels/v1/completion"
+	MAX_TOKENS = "32000"
 
 	DEFAULT_TEMPERATURE = "0.3"
 	DEFAULT_MODEL       = "pro"
+)
+
+var (
+	GPT_API_KEY = os.Getenv("GPT_API_KEY")
+	STORAGE_ID  = os.Getenv("STORAGE_ID")
 )

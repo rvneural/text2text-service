@@ -1,6 +1,11 @@
 package app
 
+import "os"
+
 const (
-	ADDR       = ":8081"
-	BEARER_KEY = "GAuhJOHQ4IQ3sJtFxyRO3OZ84ROyeb"
+	ADDR = ":80"
+)
+
+var (
+	BEARER_KEY = os.Getenv("KEY")
 )
