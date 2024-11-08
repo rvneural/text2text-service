@@ -11,6 +11,6 @@ const (
 )
 
 var (
-	GPT_API_KEY = os.Getenv("GPT_API_KEY")
+	GPT_API_KEY = os.Getenv("API_KEY")
 	STORAGE_ID  = os.Getenv("STORAGE_ID")
 )
