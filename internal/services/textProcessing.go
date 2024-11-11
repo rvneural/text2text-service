@@ -239,7 +239,14 @@ func (s *Service) ProcessText(model, prompt, text, temperature string) (string, 
 }
 
 func (s *Service) getMaxQueueLength() uint8 {
-	return 10
+	if config.ERR == nil && config.MAX_PARALLEL_STR != "" {
+		return uint8(config.MAX_PARALLEL)
+	} else {
+		if config.ERR != nil {
+			s.logger.Error().Msg("Error while parsing MAX_PARALLEL_STR: " + config.ERR.Error())
+		}
+		return 2
+	}
 }
 
 func (s *Service) getCurrentQueueLength() uint8 {

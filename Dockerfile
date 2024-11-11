@@ -1,7 +1,8 @@
-FROM ubuntu:latest
+FROM debian:latest
+LABEL maintainer="gafarov@realnoevremya.ru"
+RUN apt-get update && apt-get upgrade
 EXPOSE 80
-RUN ap-get update && apt-get upgrade
 COPY . .
 WORKDIR /build/linux
-CMD [ "./text2text-serivce" ]
+CMD [ "./text2text-service" ]
 

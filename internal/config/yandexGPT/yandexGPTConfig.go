@@ -1,6 +1,9 @@
 package yandexgpt
 
-import "os"
+import (
+	"os"
+	"strconv"
+)
 
 const (
 	URI        = "https://llm.api.cloud.yandex.net/foundationModels/v1/completion"
@@ -11,6 +14,8 @@ const (
 )
 
 var (
-	GPT_API_KEY = os.Getenv("API_KEY")
-	STORAGE_ID  = os.Getenv("STORAGE_ID")
+	GPT_API_KEY       = os.Getenv("API_KEY")
+	STORAGE_ID        = os.Getenv("STORAGE_ID")
+	MAX_PARALLEL_STR  = os.Getenv("MAX_PARALLEL")
+	MAX_PARALLEL, ERR = strconv.Atoi(MAX_PARALLEL_STR)
 )
