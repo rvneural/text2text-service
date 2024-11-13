@@ -7,6 +7,12 @@
         <description>Переписывает исходный текст в информационном стиле</description>
     </template>
     <template role="admin">
+        <name>correct</name>
+        <value>Расставь в этом тексте знаки препинания и исправь ошибки. Сохраняй исходный порядок слов.</value>
+        <temperature>0</temperature>
+        <description>Исправляет граматические и пунктуационные ошибки</description>
+    </template>
+    <template role="admin">
         <name>summary</name>
         <value>Сократи и перескажи этот текст. Выдели только основные и наиболее важные фрагменты.</value>
         <temperature>0.3</temperature>
