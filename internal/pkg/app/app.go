@@ -15,11 +15,10 @@ import (
 )
 
 type App struct {
-	endpoint         *endpoint.App
-	service          *service.Service
-	handler          *textHandler.Text2TextHandler
-	templatesHandler *templatesHandler.Handler
-	logger           *zerolog.Logger
+	endpoint *endpoint.App
+	service  *service.Service
+	handler  *textHandler.Text2TextHandler
+	logger   *zerolog.Logger
 }
 
 // New - конструктор приложения
@@ -30,6 +29,7 @@ func New(logger *zerolog.Logger) *App {
 	service := service.New(parser, rvpars, logger)
 
 	dbWorker := db.New(config.DB_URL)
+	logger.Info().Msg("DBURL:" + config.DB_URL)
 
 	textHandler := textHandler.New(service, dbWorker, logger)
 	templatesHandler := templatesHandler.New(logger)

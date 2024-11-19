@@ -21,7 +21,7 @@ type Text2TextHandler struct {
 }
 
 func New(service Service, dbWorker DBWorker, logger *zerolog.Logger) *Text2TextHandler {
-	return &Text2TextHandler{service: service, logger: logger}
+	return &Text2TextHandler{service: service, logger: logger, dbWorker: dbWorker}
 }
 
 // HandleRequest - обработка HTTP запроса от клиента
@@ -55,7 +55,8 @@ func (handler *Text2TextHandler) HandleRequest(c echo.Context) error {
 	}
 
 	if request.Operation_ID != "" {
-		go handler.dbWorker.RegisterOperation(request.Operation_ID, "text")
+		handler.logger.Info().Msg("Saving operation ID: " + request.Operation_ID)
+		handler.dbWorker.RegisterOperation(request.Operation_ID, "text")
 	}
 
 	// Обработка текста
@@ -72,8 +73,13 @@ func (handler *Text2TextHandler) HandleRequest(c echo.Context) error {
 	response.OldText = request.Text
 
 	if request.Operation_ID != "" {
-		byteResponse, _ := json.Marshal(response)
-		go handler.dbWorker.SetResult(request.Operation_ID, byteResponse)
+		dbResult := client.DBResult{
+			NewText: response.NewText,
+			OldText: response.OldText,
+			Prompt:  request.Prompt,
+		}
+		byteResponse, _ := json.Marshal(dbResult)
+		handler.dbWorker.SetResult(request.Operation_ID, byteResponse)
 	}
 
 	return c.JSON(http.StatusOK, response)

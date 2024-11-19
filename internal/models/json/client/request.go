@@ -11,3 +11,9 @@ type Request struct {
 	Text         string   `json:"text" xml:"text" form:"text"`
 	Temperature  string   `json:"temperature" xml:"temperature" form:"temperature"`
 }
+
+type DBResult struct {
+	OldText string `json:"old_text"`
+	Prompt  string `json:"prompt"`
+	NewText string `json:"new_text"`
+}
