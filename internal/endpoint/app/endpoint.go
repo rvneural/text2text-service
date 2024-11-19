@@ -29,7 +29,6 @@ func (app *App) Start() error {
 	e := echo.New()
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
-	e.Use(middleware.CSRF())
 	e.Use(middleware.Recover())
 
 	e.POST("/", app.Text2TextHandler.HandleRequest)
