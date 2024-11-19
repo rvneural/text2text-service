@@ -27,10 +27,9 @@ func New(text2textHandler HandleFunc, getTemplates HandleFunc, logger *zerolog.L
 func (app *App) Start() error {
 
 	e := echo.New()
-	e.Use(middleware.KeyAuth(func(key string, c echo.Context) (bool, error) {
-		return key == config.BEARER_KEY, nil
-	}))
 	e.Use(middleware.Logger())
+	e.Use(middleware.Recover())
+	e.Use(middleware.CSRF())
 	e.Use(middleware.Recover())
 
 	e.POST("/", app.Text2TextHandler.HandleRequest)
