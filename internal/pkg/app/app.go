@@ -8,6 +8,9 @@ import (
 	textHandler "Text2TextService/internal/transport/rest"
 	templatesHandler "Text2TextService/internal/transport/rest/getTemplates"
 
+	config "Text2TextService/internal/config/app"
+	"Text2TextService/internal/services/db"
+
 	"github.com/rs/zerolog"
 )
 
@@ -26,7 +29,9 @@ func New(logger *zerolog.Logger) *App {
 	rvpars := rvParser.New(logger)
 	service := service.New(parser, rvpars, logger)
 
-	textHandler := textHandler.New(service, logger)
+	dbWorker := db.New(config.DB_URL)
+
+	textHandler := textHandler.New(service, dbWorker, logger)
 	templatesHandler := templatesHandler.New(logger)
 
 	endpoint := endpoint.New(textHandler, templatesHandler, logger)

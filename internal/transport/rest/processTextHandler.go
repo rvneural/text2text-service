@@ -1,19 +1,26 @@
 package rest
 
 import (
-	client2 "Text2TextService/internal/models/json/client"
+	"Text2TextService/internal/models/json/client"
+	"encoding/json"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
 	"github.com/rs/zerolog"
 )
 
-type Text2TextHandler struct {
-	service Service
-	logger  *zerolog.Logger
+type DBWorker interface {
+	RegisterOperation(uniqID string, operation_type string) error
+	SetResult(uniqID string, data []byte) error
 }
 
-func New(service Service, logger *zerolog.Logger) *Text2TextHandler {
+type Text2TextHandler struct {
+	service  Service
+	dbWorker DBWorker
+	logger   *zerolog.Logger
+}
+
+func New(service Service, dbWorker DBWorker, logger *zerolog.Logger) *Text2TextHandler {
 	return &Text2TextHandler{service: service, logger: logger}
 }
 
@@ -24,18 +31,18 @@ func (handler *Text2TextHandler) HandleRequest(c echo.Context) error {
 
 	if c.Request().Header.Get("Content-Type") == "" {
 		handler.logger.Error().Msg("Missing content type header")
-		return c.JSON(http.StatusBadRequest, client2.Error{Error: "Missing content type header",
+		return c.JSON(http.StatusBadRequest, client.Error{Error: "Missing content type header",
 			Details: "Content type header is required\nUser application/json or application/x-www-form-urlencoded or application/xml"})
 	}
 
-	request := new(client2.Request)
+	request := new(client.Request)
 
 	// Привязка запроса к структуре request
 	err := c.Bind(request)
 
 	if err != nil {
 		handler.logger.Error().Err(err).Msg("Error while binding request")
-		return c.JSON(http.StatusBadRequest, client2.Error{Error: "Invalid request body", Details: err.Error()})
+		return c.JSON(http.StatusBadRequest, client.Error{Error: "Invalid request body", Details: err.Error()})
 	}
 
 	// Проверка полей запроса.
@@ -43,8 +50,12 @@ func (handler *Text2TextHandler) HandleRequest(c echo.Context) error {
 	// Если все поля заполнены, обрабатывается текст и возвращается результат в виде JSON.
 	if request.Prompt == "" || request.Text == "" {
 		handler.logger.Error().Msg("Request body is missing required fields")
-		return c.JSON(http.StatusBadRequest, client2.Error{Error: "Missing required fields in request body",
+		return c.JSON(http.StatusBadRequest, client.Error{Error: "Missing required fields in request body",
 			Details: "You could use incorrect Content-Type in header"})
+	}
+
+	if request.Operation_ID != "" {
+		go handler.dbWorker.RegisterOperation(request.Operation_ID, "text")
 	}
 
 	// Обработка текста
@@ -52,13 +63,18 @@ func (handler *Text2TextHandler) HandleRequest(c echo.Context) error {
 
 	if err != nil {
 		handler.logger.Error().Err(err).Msg("Error while reading body")
-		return c.JSON(http.StatusInternalServerError, client2.Error{Error: "Internal server error", Details: err.Error()})
+		return c.JSON(http.StatusInternalServerError, client.Error{Error: "Internal server error", Details: err.Error()})
 	}
 
-	var response client2.Response
+	var response client.Response
 
 	response.NewText = result
 	response.OldText = request.Text
+
+	if request.Operation_ID != "" {
+		byteResponse, _ := json.Marshal(response)
+		go handler.dbWorker.SetResult(request.Operation_ID, byteResponse)
+	}
 
 	return c.JSON(http.StatusOK, response)
 }
