@@ -15,11 +15,6 @@ import (
 	"github.com/rs/zerolog"
 )
 
-type DigestText struct {
-	Text string
-	URL  string
-}
-
 type Parser interface {
 	Parse(*string) string
 }
@@ -45,95 +40,10 @@ func New(parser Parser, rvParser RVParser, logger *zerolog.Logger) *Service {
 	}
 }
 
-func (s *Service) parseDigest(model, text string) (string, error) {
-
-	const prompt = "{{ short }}"
-
-	links := make([]string, 0, 30)
-	s.logger.Info().Msg("New request for DIGEST: " + text)
-	// Split text by '\n' and ' ', and put it into links
-	for _, line := range strings.Fields(text) {
-		links = append(links, strings.Fields(line)...)
-	}
-
-	texts := make([]DigestText, 0, len(links))
-
-	wg := sync.WaitGroup{}
-	mutex := sync.Mutex{}
-
-	for _, link := range links {
-		wg.Add(1)
-		go func(link string) {
-			defer wg.Done()
-			text, err := s.rvParser.ParseRV(link)
-			if err != nil {
-				s.logger.Error().Msg("Error while parsing url: " + err.Error())
-				mutex.Lock()
-				defer mutex.Unlock()
-				texts = append(texts, DigestText{Text: "НЕ УДАЛОСЬ ОБРАБОТАТЬ: " + link, URL: link})
-			}
-			if text != "" {
-				mutex.Lock()
-				defer mutex.Unlock()
-				s_link := strings.ReplaceAll(link, "https://realnoevremya.ru", "")
-				s_link = strings.ReplaceAll(s_link, "https://m.realnoevremya.ru", "")
-				texts = append(texts, DigestText{Text: text, URL: s_link})
-			} else {
-				s.logger.Error().Msg("Invalid url: " + link)
-			}
-		}(link)
-	}
-	var resultTexts = ""
-	resultTextList := make([]string, 0, len(texts))
-	wg.Wait()
-
-	for _, text := range texts {
-		wg.Add(1)
-		go func(text DigestText) {
-			defer wg.Done()
-			var resultText string
-			var err error
-			if strings.HasPrefix(text.Text, "НЕ УДАЛОСЬ ОБРАБОТАТЬ: ") {
-				resultText = text.Text
-			} else {
-				resultText, err = s.ProcessText(model, prompt, text.Text, "0.1")
-			}
-
-			if err != nil {
-				s.logger.Error().Msg("Error while processing text: " + err.Error())
-				return
-			}
-			url := "<a href=\"" + text.URL + "\" target=\"_blank\">"
-
-			var id int = 0
-
-			for i, s := range resultText {
-				if s == '.' || s == '!' || s == '?' || s == ',' || s == ';' || s == ':' || s == '—' || s == '-' {
-					if (i+1 < len(resultText) && resultText[i+1] == ' ') || (i+1 == len(resultText)) {
-						id = i
-						break
-					}
-				}
-			}
-			resultText = strings.TrimSpace(strings.ReplaceAll(url+resultText[:id]+"</a>"+resultText[id:], "\n", " "))
-			mutex.Lock()
-			resultTextList = append(resultTextList, resultText)
-			mutex.Unlock()
-		}(text)
-	}
-	wg.Wait()
-	for _, text := range resultTextList {
-		resultTexts += "<p>" + text + "</p>\n\n"
-	}
-	resultTexts = strings.TrimSpace(resultTexts)
-	return strings.TrimSpace(resultTexts), nil
-}
-
-// ProcessText - обработка текста с использованием Yandex GPT
 func (s *Service) ProcessText(model, prompt, text, temperature string) (string, error) {
 
 	if prompt == "{{ digest }}" {
-		return s.parseDigest(model, text)
+		return s.parseDigest(model, text), nil
 	}
 
 	if s.getCurrentQueueLength() >= s.getMaxQueueLength() {

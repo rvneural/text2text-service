@@ -4,13 +4,14 @@ import (
 	"Text2TextService/internal/models/json/client"
 	"encoding/json"
 	"net/http"
+	"strconv"
 
 	"github.com/labstack/echo/v4"
 	"github.com/rs/zerolog"
 )
 
 type DBWorker interface {
-	RegisterOperation(uniqID string, operation_type string) error
+	RegisterOperation(uniqID string, operation_type string, user_id int) error
 	SetResult(uniqID string, data []byte) error
 }
 
@@ -56,7 +57,11 @@ func (handler *Text2TextHandler) HandleRequest(c echo.Context) error {
 
 	if request.Operation_ID != "" {
 		handler.logger.Info().Msg("Saving operation ID: " + request.Operation_ID)
-		handler.dbWorker.RegisterOperation(request.Operation_ID, "text")
+		user_id, err := strconv.Atoi(request.UserID)
+		if err != nil {
+			user_id = 0
+		}
+		handler.dbWorker.RegisterOperation(request.Operation_ID, "text", user_id)
 	}
 
 	// Обработка текста

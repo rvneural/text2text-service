@@ -17,17 +17,19 @@ func New(url string) *DBService {
 	}
 }
 
-func (w *DBService) RegisterOperation(uniqID string, operation_type string) error {
+func (w *DBService) RegisterOperation(uniqID string, operation_type string, user_id int) error {
 	uri := w.url
 
 	type Request struct {
-		ID   string `json:"id"`
-		Type string `json:"type"`
+		ID     string `json:"id"`
+		Type   string `json:"type"`
+		UserID int    `json:"user_id"`
 	}
 
 	var request Request
 	request.ID = uniqID
 	request.Type = operation_type
+	request.UserID = user_id
 
 	data, err := json.Marshal(request)
 	if err != nil {
