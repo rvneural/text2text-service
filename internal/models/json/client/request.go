@@ -10,7 +10,7 @@ type Request struct {
 	Prompt       string   `json:"prompt" xml:"prompt" form:"prompt"`
 	Text         string   `json:"text" xml:"text" form:"text"`
 	Temperature  string   `json:"temperature" xml:"temperature" form:"temperature"`
-	UserID       string   `json:"user_id" xml:"user_id" form:"user_id"`
+	UserID       int      `json:"user_id" xml:"user_id" form:"user_id"`
 }
 
 type DBResult struct {

@@ -4,7 +4,6 @@ import (
 	"Text2TextService/internal/models/json/client"
 	"encoding/json"
 	"net/http"
-	"strconv"
 
 	"github.com/labstack/echo/v4"
 	"github.com/rs/zerolog"
@@ -56,12 +55,7 @@ func (handler *Text2TextHandler) HandleRequest(c echo.Context) error {
 	}
 
 	if request.Operation_ID != "" {
-		handler.logger.Info().Msg("Saving operation ID: " + request.Operation_ID)
-		user_id, err := strconv.Atoi(request.UserID)
-		if err != nil {
-			user_id = 0
-		}
-		handler.dbWorker.RegisterOperation(request.Operation_ID, "text", user_id)
+		handler.dbWorker.RegisterOperation(request.Operation_ID, "text", request.UserID)
 	}
 
 	// Обработка текста
@@ -69,6 +63,10 @@ func (handler *Text2TextHandler) HandleRequest(c echo.Context) error {
 
 	if err != nil {
 		handler.logger.Error().Err(err).Msg("Error while reading body")
+		var response client.Response
+		response.NewText = err.Error()
+		response.OldText = err.Error()
+		go handler.saveOperation(request, &response)
 		return c.JSON(http.StatusInternalServerError, client.Error{Error: "Internal server error", Details: err.Error()})
 	}
 
@@ -76,7 +74,11 @@ func (handler *Text2TextHandler) HandleRequest(c echo.Context) error {
 
 	response.NewText = result
 	response.OldText = request.Text
+	go handler.saveOperation(request, &response)
+	return c.JSON(http.StatusOK, response)
+}
 
+func (handler *Text2TextHandler) saveOperation(request *client.Request, response *client.Response) {
 	if request.Operation_ID != "" {
 		dbResult := client.DBResult{
 			NewText: response.NewText,
@@ -86,6 +88,4 @@ func (handler *Text2TextHandler) HandleRequest(c echo.Context) error {
 		byteResponse, _ := json.Marshal(dbResult)
 		handler.dbWorker.SetResult(request.Operation_ID, byteResponse)
 	}
-
-	return c.JSON(http.StatusOK, response)
 }
