@@ -3,6 +3,7 @@ package app
 import (
 	endpoint "Text2TextService/internal/endpoint/app"
 	service "Text2TextService/internal/services"
+	anotherParser "Text2TextService/internal/services/anothersiteparser"
 	rvParser "Text2TextService/internal/services/rvparser"
 	promptParser "Text2TextService/internal/services/templates"
 	textHandler "Text2TextService/internal/transport/rest"
@@ -26,7 +27,8 @@ func New(logger *zerolog.Logger) *App {
 	logger.Debug().Msg("Initializing app...")
 	parser := promptParser.New(logger)
 	rvpars := rvParser.New(logger)
-	service := service.New(parser, rvpars, logger)
+	anotherpars := anotherParser.New(logger)
+	service := service.New(parser, rvpars, anotherpars, logger)
 
 	dbWorker := db.New(config.DB_URL)
 	logger.Info().Msg("DBURL:" + config.DB_URL)

@@ -15,7 +15,7 @@ import (
 	"github.com/rs/zerolog"
 )
 
-type Parser interface {
+type PromptParser interface {
 	Parse(*string) string
 }
 
@@ -23,20 +23,26 @@ type RVParser interface {
 	ParseRV(string) (string, error)
 }
 
-type Service struct {
-	queueLen uint8
-	mu       sync.Mutex
-	parser   Parser
-	logger   *zerolog.Logger
-	rvParser RVParser
+type AnotherParser interface {
+	Parse(string) (string, error)
 }
 
-func New(parser Parser, rvParser RVParser, logger *zerolog.Logger) *Service {
+type Service struct {
+	queueLen      uint8
+	mu            sync.Mutex
+	promptParser  PromptParser
+	logger        *zerolog.Logger
+	rvParser      RVParser
+	anotherParser AnotherParser
+}
+
+func New(promptParser PromptParser, rvParser RVParser, anotherParser AnotherParser, logger *zerolog.Logger) *Service {
 	return &Service{
-		parser:   parser,
-		logger:   logger,
-		rvParser: rvParser,
-		queueLen: 0,
+		promptParser:  promptParser,
+		logger:        logger,
+		rvParser:      rvParser,
+		queueLen:      0,
+		anotherParser: anotherParser,
 	}
 }
 
@@ -62,10 +68,15 @@ func (s *Service) ProcessText(model, prompt, text, temperature string) (string, 
 			if err != nil {
 				return "", err
 			}
+		} else if strings.HasPrefix(text, "https://") || strings.HasPrefix(text, "http://") {
+			text, err = s.anotherParser.Parse(text)
+			if err != nil {
+				return "", err
+			}
 		}
 	}
 
-	temp := s.parser.Parse(&prompt)
+	temp := s.promptParser.Parse(&prompt)
 
 	if model == "" {
 		model = config.DEFAULT_MODEL

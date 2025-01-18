@@ -17,18 +17,26 @@ func (s *Service) createDigestTexts(links []string) []DigestText {
 		wg.Add(1)
 		go func(link string, index int) {
 			defer wg.Done()
-			text, err := s.rvParser.ParseRV(link)
+			var text string
+			var err error
+			if strings.Contains(link, "realnoevremya.ru") {
+				text, err = s.rvParser.ParseRV(link)
+				if text != "" {
+					s_link := strings.ReplaceAll(link, "https://realnoevremya.ru", "")
+					s_link = strings.ReplaceAll(s_link, "https://m.realnoevremya.ru", "")
+					texts[index] = DigestText{Text: text, URL: s_link}
+				}
+			} else {
+				text, err = s.anotherParser.Parse(link)
+				if text != "" {
+					texts[index] = DigestText{Text: text, URL: ""}
+				}
+			}
 			if err != nil {
 				s.logger.Error().Msg("Error while parsing url: " + err.Error())
-				texts[index] = DigestText{Text: "НЕ УДАЛОСЬ ОБРАБОТАТЬ: " + link, URL: link}
+				texts[index] = DigestText{Text: "НЕ УДАЛОСЬ ОБРАБОТАТЬ: " + link, URL: ""}
 			}
-			if text != "" {
-				s_link := strings.ReplaceAll(link, "https://realnoevremya.ru", "")
-				s_link = strings.ReplaceAll(s_link, "https://m.realnoevremya.ru", "")
-				texts[index] = DigestText{Text: text, URL: s_link}
-			} else {
-				s.logger.Error().Msg("Invalid url: " + link)
-			}
+
 		}(link, i)
 	}
 	wg.Wait()
@@ -59,19 +67,19 @@ func (s *Service) createDigestResult(texts []DigestText, model string) []string 
 			defer wg.Done()
 			var resultText string
 			var err error
-			if strings.HasPrefix(text.Text, "НЕ УДАЛОСЬ ОБРАБОТАТЬ: ") {
-				resultText = text.Text + text.URL
-			} else {
+			if !strings.HasPrefix(text.Text, "НЕ УДАЛОСЬ ОБРАБОТАТЬ: ") {
 				resultText, err = s.ProcessText(model, prompt, text.Text, "0.1")
+			} else {
+				resultText = text.Text
 			}
 
 			if err != nil {
 				s.logger.Error().Msg("Error while processing text: " + err.Error())
 				return
 			}
-			url := "<a href=\"" + text.URL + "\" target=\"_blank\">"
 
-			if !strings.HasPrefix(resultText, "НЕ УДАЛОСЬ ОБРАБОТАТЬ: ") {
+			if !strings.HasPrefix(resultText, "НЕ УДАЛОСЬ ОБРАБОТАТЬ: ") && text.URL != "" {
+				url := "<a href=\"" + text.URL + "\" target=\"_blank\">"
 				start, end := s.findVerb(resultText)
 				resultText = resultText[:start] + url + resultText[start:end] + "</a>" + resultText[end:]
 				resultText = strings.ReplaceAll(resultText, "\n", " ")

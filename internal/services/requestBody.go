@@ -5,6 +5,7 @@ import (
 	yandexgpt "Text2TextService/internal/models/json/yandexGPT"
 	"encoding/json"
 	"errors"
+	"os"
 	"strings"
 )
 
@@ -14,10 +15,15 @@ func (s *Service) getRequestBody(model, prompt, text, temperature string) ([]byt
 
 	model = strings.TrimSpace(strings.ToLower(model))
 
+	model_type := os.Getenv("MODEL_TYPE")
+	if model_type == "" {
+		model_type = "latest"
+	}
+
 	if model == "lite" {
-		Req.ModelURI = "gpt://" + config.STORAGE_ID + "/yandexgpt-lite/rc"
+		Req.ModelURI = "gpt://" + config.STORAGE_ID + "/yandexgpt-lite/" + model_type
 	} else if model == "pro" {
-		Req.ModelURI = "gpt://" + config.STORAGE_ID + "/yandexgpt/rc"
+		Req.ModelURI = "gpt://" + config.STORAGE_ID + "/yandexgpt/" + model_type
 	} else {
 		return nil, errors.New("unsupported model")
 	}
